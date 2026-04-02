@@ -97,6 +97,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     removeToken();
     setTokenState(null);
     setAuthenticated(false);
+    // Redirect to /logout so nginx returns 401 and forces re-authentication on next login
+    window.location.href = '/logout';
   }, []);
 
   const value: AuthState = {
