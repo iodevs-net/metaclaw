@@ -14,6 +14,7 @@ use crate::security::{AutonomyLevel, SecurityPolicy};
 use crate::tools::{self, Tool};
 use crate::util::truncate_with_ellipsis;
 use anyhow::Result;
+use sha2::Digest;
 use futures_util::StreamExt;
 use regex::{Regex, RegexSet};
 use std::collections::HashSet;
@@ -2133,6 +2134,7 @@ pub(crate) async fn agent_turn(
     dedup_exempt_tools: &[String],
     activated_tools: Option<&std::sync::Arc<std::sync::Mutex<crate::tools::ActivatedToolSet>>>,
     model_switch_callback: Option<ModelSwitchCallback>,
+    workspace_dir: PathBuf,
 ) -> Result<String> {
     run_tool_call_loop(
         provider,
@@ -2159,6 +2161,7 @@ pub(crate) async fn agent_turn(
         0,    // max_tool_result_chars: 0 = disabled (legacy callers)
         0,    // context_token_budget: 0 = disabled (legacy callers)
         None, // shared_budget: no shared budget for legacy callers
+        Some(workspace_dir),
     )
     .await
 }
@@ -2297,6 +2300,7 @@ pub(crate) async fn run_tool_call_loop(
     max_tool_result_chars: usize,
     context_token_budget: usize,
     shared_budget: Option<Arc<std::sync::atomic::AtomicUsize>>,
+    workspace_dir: Option<PathBuf>,
 ) -> Result<String> {
     let max_iterations = if max_tool_iterations == 0 {
         DEFAULT_MAX_TOOL_ITERATIONS
@@ -2324,6 +2328,7 @@ pub(crate) async fn run_tool_call_loop(
 
     for iteration in 0..max_iterations {
         let mut seen_tool_signatures: HashSet<(String, String)> = HashSet::new();
+        let mut verification_failures: Vec<crate::agent::closed_loop_verifier::VerificationFailure> = Vec::new();
 
         if cancellation_token
             .as_ref()
@@ -3210,6 +3215,66 @@ pub(crate) async fn run_tool_call_loop(
                     .await;
             }
 
+            // ── Closed-loop verification: verify write operations ──
+            if outcome.success {
+                let tool_args = &call.arguments;
+                let result_hash = hex::encode(sha2::Sha256::digest(outcome.output.as_bytes()));
+                if let Some(ref ws_dir) = workspace_dir {
+                    if crate::agent::closed_loop_verifier::is_write_tool(&call.name) {
+                        match crate::agent::closed_loop_verifier::verify_write_operation(
+                            &call.name,
+                            tool_args,
+                            &outcome.output,
+                            &result_hash,
+                            ws_dir,
+                        ) {
+                            Ok(Some(())) => {
+                                tracing::debug!(tool = %call.name, "closed-loop verification passed");
+                            }
+                            Ok(None) => {
+                                // Not a verifiable write tool or no credential
+                            }
+                            Err(e) => {
+                                tracing::warn!(tool = %call.name, error = %e, "closed-loop verification failed");
+                                verification_failures.push(crate::agent::closed_loop_verifier::VerificationFailure {
+                                    tool_name: call.name.clone(),
+                                    claim: tool_args.get("content")
+                                        .or(tool_args.get("text"))
+                                        .or(tool_args.get("command"))
+                                        .map(|v| v.to_string()),
+                                    actual_output: outcome.output.clone(),
+                                    mismatch_description: e.clone(),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Semantic claim verification: detect ignored errors ──
+            // Check if tool output contains error indicators that contradict success
+            if outcome.success && !outcome.output.is_empty() {
+                let error_indicators = ["Error:", "error:", "failed", "permission denied",
+                    "command not found", "does not exist", "No such file", "cannot",
+                    "unable to", "could not", "failed to"];
+                let output_lower = outcome.output.to_lowercase();
+                for indicator in &error_indicators {
+                    if output_lower.contains(*indicator) {
+                        tracing::warn!(tool = %call.name, indicator = %indicator,
+                            "Agent may have missed error in tool output");
+                        verification_failures.push(crate::agent::closed_loop_verifier::VerificationFailure {
+                            tool_name: call.name.clone(),
+                            claim: None,
+                            actual_output: outcome.output.clone(),
+                            mismatch_description: format!(
+                                "Tool output contains error indicator '{}' but execution reported success", indicator
+                            ),
+                        });
+                        break;
+                    }
+                }
+            }
+
             // ── Progress: tool completion ───────────────────────
             if let Some(ref tx) = on_delta {
                 let secs = outcome.duration.as_secs();
@@ -3249,6 +3314,7 @@ pub(crate) async fn run_tool_call_loop(
                     .get(result_index)
                     .map(|c| &c.arguments)
                     .unwrap_or(&serde_json::Value::Null);
+
                 let det_result = loop_detector.record(&tool_name, args, &outcome.output);
                 match det_result {
                     crate::agent::loop_detector::LoopDetectionResult::Ok => {}
@@ -3337,6 +3403,51 @@ pub(crate) async fn run_tool_call_loop(
                     consecutive_identical_outputs
                 );
             }
+        }
+
+        // ── Self-critique: if verification failed, inject correction prompt ──
+        const MAX_SELF_CRITIQUE_RETRIES: u32 = 3;
+        let original_request = history
+            .iter()
+            .find(|m| m.role == "user")
+            .map(|m| m.content.clone())
+            .unwrap_or_default();
+        let self_critique_count = history
+            .iter()
+            .filter(|m| m.role == "user" && m.content.contains("[SELF-CRITIQUE]"))
+            .count() as u32;
+
+        if !verification_failures.is_empty() && self_critique_count < MAX_SELF_CRITIQUE_RETRIES {
+            let agent_response = history
+                .iter()
+                .rev()
+                .find(|m| m.role == "assistant")
+                .map(|m| m.content.clone())
+                .unwrap_or_default();
+
+            let critique_prompt = crate::agent::self_critique::generate_self_critique_prompt(
+                &original_request,
+                &agent_response,
+                &verification_failures,
+                MAX_SELF_CRITIQUE_RETRIES,
+                self_critique_count,
+            );
+            tracing::info!(
+                failures = verification_failures.len(),
+                retry = self_critique_count,
+                "Self-critique triggered"
+            );
+            history.push(ChatMessage::user(format!("[SELF-CRITIQUE]\n{}", critique_prompt)));
+            verification_failures.clear();
+            continue; // Go to next iteration with the critique prompt
+        } else if !verification_failures.is_empty() && self_critique_count >= MAX_SELF_CRITIQUE_RETRIES {
+            let escalation = crate::agent::self_critique::generate_escalation_message(
+                &original_request,
+                &verification_failures,
+                &[],
+            );
+            tracing::warn!("Escalating to user after {} self-critique failures", MAX_SELF_CRITIQUE_RETRIES);
+            return Ok(escalation);
         }
 
         // Add assistant message with tool calls + tool results to history.
@@ -3980,6 +4091,7 @@ pub async fn run(
                 config.agent.max_tool_result_chars,
                 config.agent.max_context_tokens,
                 None, // shared_budget
+                Some(config.workspace_dir.clone()),
             )
             .await
             {
@@ -4286,6 +4398,7 @@ pub async fn run(
                     config.agent.max_tool_result_chars,
                     config.agent.max_context_tokens,
                     None, // shared_budget
+                    Some(config.workspace_dir.clone()),
                 )
                 .await
                 {
@@ -4790,6 +4903,7 @@ pub async fn process_message(
         &config.agent.tool_call_dedup_exempt,
         activated_handle_pm.as_ref(),
         None,
+        config.workspace_dir.clone(),
     )
     .await
 }
@@ -5799,6 +5913,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect_err("provider without vision support should fail");
@@ -5854,6 +5969,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect_err("oversized payload must fail");
@@ -5903,6 +6019,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("valid multimodal payload should pass");
@@ -5950,6 +6067,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6006,6 +6124,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect_err("should fail when vision provider cannot be created");
@@ -6060,6 +6179,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6117,6 +6237,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect_err("should fail due to nonexistent vision provider");
@@ -6171,6 +6292,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("empty image markers should not trigger vision routing");
@@ -6224,6 +6346,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6362,6 +6485,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("parallel execution should complete");
@@ -6436,6 +6560,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("cron_add delivery defaults should be injected");
@@ -6502,6 +6627,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("explicit delivery mode should be preserved");
@@ -6562,6 +6688,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6636,6 +6763,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("non-interactive shell should succeed for low-risk command");
@@ -6699,6 +6827,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6784,6 +6913,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("loop should complete");
@@ -6844,6 +6974,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -6930,6 +7061,7 @@ mod tests {
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("native tool-call text should be relayed through on_delta");
@@ -6998,6 +7130,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -7069,6 +7202,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -7144,6 +7278,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -7228,6 +7363,7 @@ mod tests {
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await
@@ -7315,6 +7451,7 @@ mod tests {
                 &[],
                 Some(&activated),
                 None,
+                std::path::PathBuf::new(),
             )
             .await
             .expect("wrapper path should execute activated tools");
@@ -9242,6 +9379,7 @@ Let me check the result."#;
             0,
             0,
             None,
+            None,
         )
         .await
         .expect("tool loop should complete");
@@ -9399,6 +9537,7 @@ Let me check the result."#;
                     0,
                     0,
                     None,
+                    None,
                 ),
             )
             .await
@@ -9481,6 +9620,7 @@ Let me check the result."#;
                     0,
                     0,
                     None,
+                    None,
                 ),
             )
             .await
@@ -9538,6 +9678,7 @@ Let me check the result."#;
             &crate::config::PacingConfig::default(),
             0,
             0,
+            None,
             None,
         )
         .await

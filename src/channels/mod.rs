@@ -2923,6 +2923,7 @@ async fn process_channel_message(
                         ctx.max_tool_result_chars,
                         ctx.context_token_budget,
                         None, // shared_budget
+                        Some(ctx.workspace_dir.as_ref().to_path_buf()), // workspace_dir
                     ),
                     ),
                     ),

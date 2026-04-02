@@ -1,7 +1,9 @@
 #[allow(clippy::module_inception)]
 pub mod agent;
 pub mod classifier;
+pub mod closed_loop_verifier;
 pub mod context_analyzer;
+pub mod identity;
 pub mod context_compressor;
 pub mod cost;
 pub mod dispatcher;
@@ -13,6 +15,8 @@ pub mod loop_detector;
 pub mod memory_loader;
 pub mod personality;
 pub mod prompt;
+pub mod reflection;
+pub mod self_critique;
 pub mod thinking;
 pub mod tool_execution;
 
