@@ -1,0 +1,25 @@
+# Metaclaw Local Development
+# ⚠️ Ver docs/getting-started/METACLAV_LOCAL_SETUP.md y MCP_CLOUD_STORAGE_SETUP.md
+
+services:
+  metaclaw:
+    image: metaclaw:mcp
+    container_name: metaclaw-dev
+    ports:
+      - "42777:42617"
+    volumes:
+      - ./zeroclaw-data:/zeroclaw-data
+    environment:
+      - ZEROCLAW_CONFIG=/zeroclaw-data/.zeroclaw/config.toml
+      # Minimax
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY}
+      # Google Drive MCP
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REFRESH_TOKEN=${GOOGLE_REFRESH_TOKEN:-}
+      # Dropbox MCP
+      - DROPBOX_ACCESS_TOKEN=${DROPBOX_ACCESS_TOKEN:-}
+      # OneDrive MCP
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID:-}
+      - MICROSOFT_TENANT_ID=${MICROSOFT_TENANT_ID:-}
+    restart: unless-stopped

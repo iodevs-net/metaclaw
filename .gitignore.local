@@ -1,0 +1,11 @@
+# Archivos con secrets
+.env
+.env.*
+zeroclaw-data/
+
+# Archivos locales
+.serena/
+*.log
+
+# Docker
+metaclaw-with-mcp.dockerfile

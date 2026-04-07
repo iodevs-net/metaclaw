@@ -25,3 +25,15 @@ _No custom hooks defined yet._
 ## Slash Commands
 
 _No custom slash commands defined yet._
+
+## Metaclaw Local Setup
+
+⚠️ **GOTCHA: Configuración de MiniMax**
+
+**Provider correcto para MiniMax-M2.7:**
+```toml
+default_provider = "anthropic-custom:https://api.minimax.io/anthropic"
+default_model = "MiniMax-M2.7-highspeed"
+```
+
+Ver documento completo: `docs/getting-started/METACLAV_LOCAL_SETUP.md`

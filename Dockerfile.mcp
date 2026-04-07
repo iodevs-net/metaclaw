@@ -1,0 +1,126 @@
+# syntax=docker/dockerfile:1.7
+# Imagen metaclaw con MCP servers + Web UI
+# Construir con: docker build -f Dockerfile.mcp -t metaclaw:mcp .
+
+# ── Stage 1: Web Build ─────────────────────────────────────────────────────
+FROM node:22-alpine AS web-builder
+
+WORKDIR /web
+COPY web/package.json web/package-lock.json* ./
+RUN npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+COPY web/ .
+RUN npm run build
+
+# ── Stage 2: Rust Build ────────────────────────────────────────────────────
+FROM rust:1.94-slim AS builder
+
+WORKDIR /app
+ARG ZEROCLAW_CARGO_FEATURES="channel-lark,whatsapp-web"
+
+# Build dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y \
+        pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy manifests
+COPY Cargo.toml Cargo.lock ./
+COPY crates/robot-kit/ crates/robot-kit/
+COPY crates/aardvark-sys/ crates/aardvark-sys/
+COPY apps/tauri/Cargo.toml apps/tauri/Cargo.toml
+
+# Create dummy targets
+RUN mkdir -p src benches apps/tauri/src \
+    && echo "fn main() {}" > src/main.rs \
+    && echo "" > src/lib.rs \
+    && echo "fn main() {}" > benches/agent_benchmarks.rs \
+    && echo "fn main() {}" > apps/tauri/src/main.rs \
+    && echo "fn main() {}" > apps/tauri/build.rs
+
+# First build to cache dependencies
+RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
+    --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
+    if [ -n "$ZEROCLAW_CARGO_FEATURES" ]; then \
+      cargo build --release --locked --features "$ZEROCLAW_CARGO_FEATURES"; \
+    else \
+      cargo build --release --locked; \
+    fi
+
+# Copy source and web assets
+RUN rm -rf src benches
+COPY src/ src/
+COPY benches/ benches/
+COPY web/package.json web/package-lock.json* ./web/
+COPY *.rs .
+
+# Copy web dist from build stage
+COPY --from=web-builder /web/dist ./web/dist
+
+# Final build with embedded web assets
+RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/registry,sharing=locked \
+    --mount=type=cache,id=zeroclaw-cargo-git,target=/usr/local/cargo/git,sharing=locked \
+    --mount=type=cache,id=zeroclaw-target,target=/app/target,sharing=locked \
+    rm -rf target/release/.fingerprint/zeroclawlabs-* \
+           target/release/deps/zeroclawlabs-* \
+           target/release/incremental/zeroclawlabs-* && \
+    if [ -n "$ZEROCLAW_CARGO_FEATURES" ]; then \
+      cargo build --release --locked --features "$ZEROCLAW_CARGO_FEATURES"; \
+    else \
+      cargo build --release --locked; \
+    fi && \
+    cp target/release/zeroclaw /app/zeroclaw && \
+    strip /app/zeroclaw
+
+# Verify binary
+RUN size=$(stat -c%s /app/zeroclaw) && \
+    if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes)"; exit 1; fi
+
+# ── Runtime stage con Node.js y MCP ───────────────────────────────────────
+FROM debian:trixie-slim
+
+# Instalar runtime deps + Node.js 22
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar MCPs globalmente
+RUN npm install -g \
+    @modelcontextprotocol/server-gdrive \
+    @microagents/mcp-server-dropbox \
+    @softeria/ms-365-mcp-server
+
+# Preparar estructura
+RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace
+
+# Crear config inicial
+RUN printf '%s\n' \
+    'workspace_dir = "/zeroclaw-data/workspace"' \
+    'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
+    > /zeroclaw-data/.zeroclaw/config.toml && \
+    chown -R 65534:65534 /zeroclaw-data
+
+# Copiar binario
+COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
+
+# Environment
+ENV LANG=C.UTF-8
+ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
+ENV HOME=/zeroclaw-data
+ENV ZEROCLAW_GATEWAY_PORT=42617
+
+WORKDIR /zeroclaw-data
+USER 65534:65534
+EXPOSE 42617
+
+HEALTHCHECK --interval=60s --timeout=10s --retries=3 --start-period=10s \
+    CMD ["zeroclaw", "status", "--format=exit-code"]
+
+ENTRYPOINT ["zeroclaw"]
+CMD ["daemon"]
