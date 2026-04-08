@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# ZeroClaw installer
+# MetaClaw installer (fork de ZeroClaw)
 # POSIX preamble: ensure bash is available, then re-exec under bash.
 set -eu
 
@@ -89,12 +89,12 @@ error() {
 
 usage() {
   cat <<'USAGE'
-ZeroClaw installer — one-click bootstrap
+MetaClaw installer (fork de ZeroClaw) — one-click bootstrap
 
 Usage:
   ./install.sh [options]
 
-The installer builds ZeroClaw, configures your provider and API key,
+The installer builds MetaClaw, configures your provider and API key,
 starts the gateway service, and opens the dashboard — all in one step.
 
 Options:

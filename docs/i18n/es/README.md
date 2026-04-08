@@ -2,7 +2,9 @@
   <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — Asistente Personal de IA</h1>
+> **Acerca de MetaClaw**: Este es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) para uso personal/interno.
+
+<h1 align="center">🦀 MetaClaw — Asistente Personal de IA</h1>
 
 <p align="center">
   <strong>Cero sobrecarga. Cero compromisos. 100% Rust. 100% Agnóstico.</strong><br>
@@ -26,38 +28,8 @@ Construido por estudiantes y miembros de las comunidades de Harvard, MIT y Sunda
 </p>
 
 <p align="center">
-  🌐 <strong>Idiomas:</strong>
-  <a href="../../../README.md">🇺🇸 English</a> ·
-  <a href="../zh-CN/README.md">🇨🇳 简体中文</a> ·
-  <a href="../ja/README.md">🇯🇵 日本語</a> ·
-  <a href="../ko/README.md">🇰🇷 한국어</a> ·
-  <a href="../vi/README.md">🇻🇳 Tiếng Việt</a> ·
-  <a href="../tl/README.md">🇵🇭 Tagalog</a> ·
-  <a href="../es/README.md">🇪🇸 Español</a> ·
-  <a href="../pt/README.md">🇧🇷 Português</a> ·
-  <a href="../it/README.md">🇮🇹 Italiano</a> ·
-  <a href="../de/README.md">🇩🇪 Deutsch</a> ·
-  <a href="../fr/README.md">🇫🇷 Français</a> ·
-  <a href="../ar/README.md">🇸🇦 العربية</a> ·
-  <a href="../hi/README.md">🇮🇳 हिन्दी</a> ·
-  <a href="../ru/README.md">🇷🇺 Русский</a> ·
-  <a href="../bn/README.md">🇧🇩 বাংলা</a> ·
-  <a href="../he/README.md">🇮🇱 עברית</a> ·
-  <a href="../pl/README.md">🇵🇱 Polski</a> ·
-  <a href="../cs/README.md">🇨🇿 Čeština</a> ·
-  <a href="../nl/README.md">🇳🇱 Nederlands</a> ·
-  <a href="../tr/README.md">🇹🇷 Türkçe</a> ·
-  <a href="../uk/README.md">🇺🇦 Українська</a> ·
-  <a href="../id/README.md">🇮🇩 Bahasa Indonesia</a> ·
-  <a href="../th/README.md">🇹🇭 ไทย</a> ·
-  <a href="../ur/README.md">🇵🇰 اردو</a> ·
-  <a href="../ro/README.md">🇷🇴 Română</a> ·
-  <a href="../sv/README.md">🇸🇪 Svenska</a> ·
-  <a href="../el/README.md">🇬🇷 Ελληνικά</a> ·
-  <a href="../hu/README.md">🇭🇺 Magyar</a> ·
-  <a href="../fi/README.md">🇫🇮 Suomi</a> ·
-  <a href="../da/README.md">🇩🇰 Dansk</a> ·
-  <a href="../nb/README.md">🇳🇴 Norsk</a>
+  🌐 <strong>Idioma:</strong>
+  <a href="../es/README.md">🇪🇸 Español</a>
 </p>
 
 ZeroClaw es un asistente personal de IA que ejecutas en tus propios dispositivos. Te responde en los canales que ya usas (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work y más). Tiene un panel web para control en tiempo real y puede conectarse a periféricos de hardware (ESP32, STM32, Arduino, Raspberry Pi). El Gateway es solo el plano de control — el producto es el asistente.
@@ -180,11 +152,11 @@ Comportamiento predeterminado en todos los canales:
 
 **Niveles de autonomía:**
 
-| Nivel | Comportamiento |
-|-------|----------------|
-| `ReadOnly` | El agente puede observar pero no actuar |
+| Nivel                         | Comportamiento                                                       |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `ReadOnly`                    | El agente puede observar pero no actuar                              |
 | `Supervised` (predeterminado) | El agente actúa con aprobación para operaciones de riesgo medio/alto |
-| `Full` | El agente actúa autónomamente dentro de los límites de la política |
+| `Full`                        | El agente actúa autónomamente dentro de los límites de la política   |
 
 **Capas de sandboxing:** aislamiento del workspace, bloqueo de traversal de rutas, listas de comandos permitidos, rutas prohibidas (`/etc`, `/root`, `~/.ssh`), limitación de velocidad (máximo de acciones/hora, topes de costo/día).
 
@@ -195,10 +167,10 @@ Comportamiento predeterminado en todos los canales:
 
 Usa este tablero para avisos importantes (cambios incompatibles, avisos de seguridad, ventanas de mantenimiento y bloqueadores de lanzamiento).
 
-| Fecha (UTC) | Nivel       | Aviso                                                                                                                                                                                                                                                                                                                                                 | Acción                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _Crítico_  | **No estamos afiliados** con `openagen/zeroclaw`, `zeroclaw.org` ni `zeroclaw.net`. Los dominios `zeroclaw.org` y `zeroclaw.net` actualmente apuntan al fork `openagen/zeroclaw`, y ese dominio/repositorio están suplantando nuestro sitio web/proyecto oficial.                                                                                       | No confíes en información, binarios, recaudaciones de fondos o anuncios de esas fuentes. Usa solo [este repositorio](https://github.com/zeroclaw-labs/zeroclaw) y nuestras cuentas sociales verificadas.                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| 2026-02-19 | _Importante_ | Anthropic actualizó los términos de Autenticación y Uso de Credenciales el 2026-02-19. Los tokens OAuth de Claude Code (Free, Pro, Max) están destinados exclusivamente para Claude Code y Claude.ai; usar tokens OAuth de Claude Free/Pro/Max en cualquier otro producto, herramienta o servicio (incluyendo Agent SDK) no está permitido y puede violar los Términos de Servicio del Consumidor. | Por favor, evita temporalmente las integraciones OAuth de Claude Code para prevenir pérdidas potenciales. Cláusula original: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).                                                                                                                                                                                                                                                                                                                                                                                    |
+| Fecha (UTC) | Nivel        | Aviso                                                                                                                                                                                                                                                                                                                                                                                              | Acción                                                                                                                                                                                                                                                    |
+| ----------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-19  | _Crítico_    | **No estamos afiliados** con `openagen/zeroclaw`, `zeroclaw.org` ni `zeroclaw.net`. Los dominios `zeroclaw.org` y `zeroclaw.net` actualmente apuntan al fork `openagen/zeroclaw`, y ese dominio/repositorio están suplantando nuestro sitio web/proyecto oficial.                                                                                                                                  | No confíes en información, binarios, recaudaciones de fondos o anuncios de esas fuentes. Usa solo [este repositorio](https://github.com/zeroclaw-labs/zeroclaw) y nuestras cuentas sociales verificadas.                                                  |
+| 2026-02-19  | _Importante_ | Anthropic actualizó los términos de Autenticación y Uso de Credenciales el 2026-02-19. Los tokens OAuth de Claude Code (Free, Pro, Max) están destinados exclusivamente para Claude Code y Claude.ai; usar tokens OAuth de Claude Free/Pro/Max en cualquier otro producto, herramienta o servicio (incluyendo Agent SDK) no está permitido y puede violar los Términos de Servicio del Consumidor. | Por favor, evita temporalmente las integraciones OAuth de Claude Code para prevenir pérdidas potenciales. Cláusula original: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use). |
 
 ## Características destacadas
 
@@ -228,13 +200,13 @@ Usa este tablero para avisos importantes (cambios incompatibles, avisos de segur
 
 Benchmark rápido en máquina local (macOS arm64, febrero 2026) normalizado para hardware edge de 0.8GHz.
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
-| ------------------------- | ------------- | -------------- | --------------- | -------------------- |
-| **Lenguaje**              | TypeScript    | Python         | Go              | **Rust**             |
-| **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
-| **Arranque (core 0.8GHz)** | > 500s       | > 30s          | < 1s            | **< 10ms**           |
-| **Tamaño del binario**    | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
-| **Costo**                 | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **Cualquier hardware $10** |
+|                            | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀                |
+| -------------------------- | ------------- | -------------- | --------------- | -------------------------- |
+| **Lenguaje**               | TypeScript    | Python         | Go              | **Rust**                   |
+| **RAM**                    | > 1GB         | > 100MB        | < 10MB          | **< 5MB**                  |
+| **Arranque (core 0.8GHz)** | > 500s        | > 30s          | < 1s            | **< 10ms**                 |
+| **Tamaño del binario**     | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**                |
+| **Costo**                  | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **Cualquier hardware $10** |
 
 > Notas: Los resultados de ZeroClaw se miden en compilaciones release usando `/usr/bin/time -l`. OpenClaw requiere el runtime de Node.js (típicamente ~390MB de sobrecarga adicional de memoria), mientras que NanoBot requiere el runtime de Python. PicoClaw y ZeroClaw son binarios estáticos. Las cifras de RAM anteriores son de memoria en runtime; los requisitos de compilación son mayores.
 
@@ -286,13 +258,13 @@ Panel web React 19 + Vite 6 + Tailwind CSS 4 servido directamente desde el Gatew
 
 ### Objetivos de firmware
 
-| Objetivo | Plataforma | Propósito |
-|----------|------------|-----------|
-| ESP32 | Espressif ESP32 | Agente periférico inalámbrico |
-| ESP32-UI | ESP32 + Display | Agente con interfaz visual |
-| STM32 Nucleo | STM32 (ARM Cortex-M) | Periférico industrial |
-| Arduino | Arduino | Puente básico de sensores/actuadores |
-| Uno Q Bridge | Arduino Uno | Puente serial al agente |
+| Objetivo     | Plataforma           | Propósito                            |
+| ------------ | -------------------- | ------------------------------------ |
+| ESP32        | Espressif ESP32      | Agente periférico inalámbrico        |
+| ESP32-UI     | ESP32 + Display      | Agente con interfaz visual           |
+| STM32 Nucleo | STM32 (ARM Cortex-M) | Periférico industrial                |
+| Arduino      | Arduino              | Puente básico de sensores/actuadores |
+| Uno Q Bridge | Arduino Uno          | Puente serial al agente              |
 
 ### Herramientas + automatización
 
@@ -322,7 +294,6 @@ Panel web React 19 + Vite 6 + Tailwind CSS 4 servido directamente desde el Gatew
 - CI/CD: beta (automático al hacer push) → stable (dispatch manual) → Docker, crates.io, Scoop, AUR, Homebrew, tweet.
 - Binarios preconstruidos para Linux (x86_64, aarch64, armv7), macOS (x86_64, aarch64), Windows (x86_64).
 
-
 ## Configuración
 
 `~/.zeroclaw/config.toml` mínimo:
@@ -337,18 +308,21 @@ Referencia completa de configuración: [docs/reference/api/config-reference.md](
 ### Configuración de canales
 
 **Telegram:**
+
 ```toml
 [channels.telegram]
 bot_token = "123456:ABC-DEF..."
 ```
 
 **Discord:**
+
 ```toml
 [channels.discord]
 token = "your-bot-token"
 ```
 
 **Slack:**
+
 ```toml
 [channels.slack]
 bot_token = "xoxb-..."
@@ -356,12 +330,14 @@ app_token = "xapp-..."
 ```
 
 **WhatsApp:**
+
 ```toml
 [channels.whatsapp]
 enabled = true
 ```
 
 **Matrix:**
+
 ```toml
 [channels.matrix]
 homeserver_url = "https://matrix.org"
@@ -370,6 +346,7 @@ password = "..."
 ```
 
 **Signal:**
+
 ```toml
 [channels.signal]
 phone_number = "+1234567890"
@@ -424,6 +401,7 @@ zeroclaw agent --provider anthropic -m "hello"
 Raíz del workspace: `~/.zeroclaw/workspace/` (configurable vía config).
 
 Archivos de prompt inyectados:
+
 - `IDENTITY.md` — personalidad y rol del agente
 - `USER.md` — contexto y preferencias del usuario
 - `MEMORY.md` — hechos y lecciones a largo plazo
@@ -513,25 +491,25 @@ Referencia completa de comandos: [docs/reference/cli/commands-reference.md](docs
 
 1. **Visual Studio Build Tools** (proporciona el enlazador MSVC y el SDK de Windows):
 
-    ```powershell
-    winget install Microsoft.VisualStudio.2022.BuildTools
-    ```
+   ```powershell
+   winget install Microsoft.VisualStudio.2022.BuildTools
+   ```
 
-    Durante la instalación (o a través del Visual Studio Installer), selecciona la carga de trabajo **"Desarrollo de escritorio con C++"**.
+   Durante la instalación (o a través del Visual Studio Installer), selecciona la carga de trabajo **"Desarrollo de escritorio con C++"**.
 
 2. **Toolchain de Rust:**
 
-    ```powershell
-    winget install Rustlang.Rustup
-    ```
+   ```powershell
+   winget install Rustlang.Rustup
+   ```
 
-    Después de la instalación, abre una nueva terminal y ejecuta `rustup default stable` para asegurarte de que el toolchain estable esté activo.
+   Después de la instalación, abre una nueva terminal y ejecuta `rustup default stable` para asegurarte de que el toolchain estable esté activo.
 
 3. **Verifica** que ambos funcionen:
-    ```powershell
-    rustc --version
-    cargo --version
-    ```
+   ```powershell
+   rustc --version
+   cargo --version
+   ```
 
 #### Opcional
 
@@ -545,23 +523,23 @@ Referencia completa de comandos: [docs/reference/cli/commands-reference.md](docs
 #### Requerido
 
 1. **Herramientas de compilación esenciales:**
-    - **Linux (Debian/Ubuntu):** `sudo apt install build-essential pkg-config`
-    - **Linux (Fedora/RHEL):** `sudo dnf group install development-tools && sudo dnf install pkg-config`
-    - **macOS:** Instala Xcode Command Line Tools: `xcode-select --install`
+   - **Linux (Debian/Ubuntu):** `sudo apt install build-essential pkg-config`
+   - **Linux (Fedora/RHEL):** `sudo dnf group install development-tools && sudo dnf install pkg-config`
+   - **macOS:** Instala Xcode Command Line Tools: `xcode-select --install`
 
 2. **Toolchain de Rust:**
 
-    ```bash
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-    ```
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
 
-    Ver [rustup.rs](https://rustup.rs) para detalles.
+   Ver [rustup.rs](https://rustup.rs) para detalles.
 
 3. **Verifica** que ambos funcionen:
-    ```bash
-    rustc --version
-    cargo --version
-    ```
+   ```bash
+   rustc --version
+   cargo --version
+   ```
 
 #### Instalador en una línea
 
@@ -575,10 +553,10 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 
 Compilar desde el código fuente necesita más recursos que ejecutar el binario resultante:
 
-| Recurso        | Mínimo  | Recomendado |
-| -------------- | ------- | ----------- |
-| **RAM + swap** | 2 GB    | 4 GB+       |
-| **Disco libre**| 6 GB    | 10 GB+      |
+| Recurso         | Mínimo | Recomendado |
+| --------------- | ------ | ----------- |
+| **RAM + swap**  | 2 GB   | 4 GB+       |
+| **Disco libre** | 6 GB   | 10 GB+      |
 
 Si tu host está por debajo del mínimo, usa binarios preconstruidos:
 
@@ -710,9 +688,9 @@ Si encuentras suplantación o uso indebido de marca, por favor [abre un issue](h
 
 ZeroClaw tiene doble licencia para máxima apertura y protección de los contribuidores:
 
-| Licencia | Caso de uso |
-|---|---|
-| [MIT](LICENSE-MIT) | Código abierto, investigación, académico, uso personal |
+| Licencia                     | Caso de uso                                                 |
+| ---------------------------- | ----------------------------------------------------------- |
+| [MIT](LICENSE-MIT)           | Código abierto, investigación, académico, uso personal      |
 | [Apache 2.0](LICENSE-APACHE) | Protección de patentes, institucional, despliegue comercial |
 
 Puedes elegir cualquiera de las licencias. **Los contribuidores otorgan automáticamente derechos bajo ambas** — ver [CLA.md](docs/contributing/cla.md) para el acuerdo completo de contribuidores.

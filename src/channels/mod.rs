@@ -2060,6 +2060,8 @@ fn strip_tool_narration(message: &str) -> String {
         "just a moment",
         "give me a moment",
         "allow me to ",
+        // Tool narration prefixes to strip
+        "🔧 ",
     ];
 
     let mut result_lines: Vec<&str> = Vec::new();
@@ -2077,6 +2079,10 @@ fn strip_tool_narration(message: &str) -> String {
         let lower = trimmed.to_lowercase();
         if narration_prefixes.iter().any(|p| lower.starts_with(p)) {
             // Skip this narration line
+            continue;
+        }
+        // Also strip lines that are just "🔧 <tool_name>:" pattern
+        if trimmed.starts_with('🔧') && trimmed.ends_with(':') && trimmed.len() < 50 {
             continue;
         }
         // First non-narration, non-empty line — keep everything from here

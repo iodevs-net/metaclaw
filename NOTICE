@@ -1,7 +1,24 @@
-ZeroClaw
-Copyright 2025 ZeroClaw Labs
+MetaClaw
+Copyright 2025 MetaClaw (fork de ZeroClaw)
+Copyright 2023-2025 ZeroClaw Labs (upstream)
+
+================================================================================
+                              UPSTREAM ATTRIBUTION
+================================================================================
+
+MetaClaw es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw),
+desarrollado por ZeroClaw Labs.
 
 This product includes software developed at ZeroClaw Labs (https://github.com/zeroclaw-labs).
+
+Official Repository (Upstream)
+==============================
+
+The only official ZeroClaw repository is:
+https://github.com/zeroclaw-labs/zeroclaw
+
+Any other repository claiming to be ZeroClaw is unauthorized.
+See TRADEMARK.md for the full trademark policy.
 
 Official Repository
 ===================

@@ -1,5 +1,9 @@
 # Security Policy
 
+> **Nota**: MetaClaw es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw).
+> Este documento hereda la política de seguridad de ZeroClaw. Para vulnerabilidades del upstream,
+> consulta [ZeroClaw Security Policy](https://github.com/zeroclaw-labs/zeroclaw/blob/master/SECURITY.md).
+
 ## Supported Versions
 
 | Version | Supported          |

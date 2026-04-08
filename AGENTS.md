@@ -1,4 +1,16 @@
-# AGENTS.md — ZeroClaw
+# AGENTS.md — MetaClaw (Fork de ZeroClaw)
+
+> **Acerca de MetaClaw**
+>
+> MetaClaw es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw), mantenido localmente para uso personal/interno.
+>
+> - **Upstream**: Fork de ZeroClaw (repositorio local en `/home/leonardo/dev/proyectos/zeroclaw`)
+> - **Propósito**: Uso personal con modificaciones específicas
+> - **Compatibilidad**: Mantiene compatibilidad con la API y configuración de ZeroClaw
+>
+> Para información general sobre ZeroClaw, consulta el [repositorio upstream](https://github.com/zeroclaw-labs/zeroclaw).
+
+---
 
 Cross-tool agent instructions for any AI coding assistant working on this repository.
 
@@ -20,7 +32,9 @@ Docs-only changes: run markdown lint and link-integrity checks. If touching boot
 
 ## Project Snapshot
 
-ZeroClaw is a Rust-first autonomous agent runtime optimized for performance, efficiency, stability, extensibility, sustainability, and security.
+MetaClaw es un fork personal de ZeroClaw — un runtime de agente autónomo en Rust optimizado para rendimiento, eficiencia, estabilidad, extensibilidad, sostenibilidad y seguridad.
+
+> **Nota**: Este proyecto hereda la arquitectura de ZeroClaw. ZeroClaw es un proyecto de [ZeroClaw Labs](https://github.com/zeroclaw-labs/zeroclaw).
 
 Core architecture is trait-driven and modular. Extend by implementing traits and registering in factory modules.
 
@@ -61,6 +75,8 @@ When uncertain, classify as higher risk.
 
 ## Workflow
 
+> **Nota**: Este es un fork personal. Los flujos de trabajo de contribución están adaptados para uso individual. Para contribuciones al proyecto ZeroClaw principal, consulta [zeroclaw-labs/zeroclaw](https://github.com/zeroclaw-labs/zeroclaw).
+
 1. **Read before write** — inspect existing module, factory wiring, and adjacent tests before editing.
 2. **One concern per PR** — avoid mixed feature+refactor+infra patches.
 3. **Implement minimal patch** — no speculative abstractions, no config keys without a concrete use case.
@@ -69,9 +85,9 @@ When uncertain, classify as higher risk.
 6. **Queue hygiene** — stacked PR: declare `Depends on #...`. Replacing old PR: declare `Supersedes #...`.
 
 Branch/commit/PR rules:
+
 - Work from a non-`master` branch. Open a PR to `master`; do not push directly.
 - Use conventional commit titles. Prefer small PRs (`size: XS/S/M`).
-- Follow `.github/pull_request_template.md` fully.
 - Never commit secrets, personal data, or real identity information (see `@docs/contributing/pr-discipline.md`).
 
 ## Anti-Patterns

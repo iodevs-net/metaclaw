@@ -1,5 +1,7 @@
 # Contributor Covenant Code of Conduct
 
+> **Acerca de MetaClaw**: MetaClaw es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw).
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our

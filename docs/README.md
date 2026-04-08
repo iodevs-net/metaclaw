@@ -1,67 +1,71 @@
-# ZeroClaw Documentation Hub
+# MetaClaw - Centro de Documentación
 
-This page is the primary entry point for the documentation system.
+> **Acerca de MetaClaw**
+>
+> MetaClaw es un fork personal de [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw), mantenido localmente para uso personal/interno.
+>
+> - **Upstream**: Fork de ZeroClaw (repositorio local en `/home/leonardo/dev/proyectos/zeroclaw`)
+> - **Propósito**: Uso personal con modificaciones específicas
+> - **Compatibilidad**: Mantiene compatibilidad con la API y configuración de ZeroClaw
+>
+> Para información general sobre ZeroClaw, consulta el [repositorio upstream](https://github.com/zeroclaw-labs/zeroclaw).
 
-Last refreshed: **February 21, 2026**.
+Esta página es el punto de entrada principal para el sistema de documentación.
 
-Localized hubs:
-[العربية](README.ar.md) · [বাংলা](README.bn.md) · [Čeština](README.cs.md) · [Dansk](README.da.md) · [Deutsch](README.de.md) · [Ελληνικά](README.el.md) · [Español](README.es.md) · [Suomi](README.fi.md) · [Français](README.fr.md) · [עברית](README.he.md) · [हिन्दी](README.hi.md) · [Magyar](README.hu.md) · [Bahasa Indonesia](README.id.md) · [Italiano](README.it.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Norsk Bokmål](README.nb.md) · [Nederlands](README.nl.md) · [Polski](README.pl.md) · [Português](README.pt.md) · [Română](README.ro.md) · [Русский](README.ru.md) · [Svenska](README.sv.md) · [ไทย](README.th.md) · [Tagalog](README.tl.md) · [Türkçe](README.tr.md) · [Українська](README.uk.md) · [اردو](README.ur.md) · [Tiếng Việt](README.vi.md) · [简体中文](README.zh-CN.md).
+## Empezar Aquí
 
-## Start Here
+| Quiero...                                     | Leer esto                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------- |
+| Instalar y ejecutar MetaClaw rápidamente      | [README.md (Inicio Rápido)](../README.md#quick-start)               |
+| Bootstrap en un comando                       | [one-click-bootstrap.md](setup-guides/one-click-bootstrap.md)       |
+| Actualizar o desinstalar en macOS             | [macos-update-uninstall.md](setup-guides/macos-update-uninstall.md) |
+| Encontrar comandos por tarea                  | [commands-reference.md](reference/cli/commands-reference.md)        |
+| Ver configuración de claves rápidamente       | [config-reference.md](reference/api/config-reference.md)            |
+| Configurar providers/endpoints personalizados | [custom-providers.md](contributing/custom-providers.md)             |
+| Configurar proveedor Z.AI / GLM               | [zai-glm-setup.md](setup-guides/zai-glm-setup.md)                   |
+| Usar patrones de integración LangGraph        | [langgraph-integration.md](contributing/langgraph-integration.md)   |
+| Operar runtime (runbook día 2)                | [operations-runbook.md](ops/operations-runbook.md)                  |
+| Solucionar problemas de instalación/runtime   | [troubleshooting.md](ops/troubleshooting.md)                        |
+| Configurar Matrix con E2EE y diagnósticos     | [matrix-e2ee-guide.md](security/matrix-e2ee-guide.md)               |
+| Navegar docs por categoría                    | [SUMMARY.md](SUMMARY.md)                                            |
 
-| I want to… | Read this |
-|---|---|
-| Install and run ZeroClaw quickly | [README.md (Quick Start)](../README.md#quick-start) |
-| Bootstrap in one command | [one-click-bootstrap.md](setup-guides/one-click-bootstrap.md) |
-| Update or uninstall on macOS | [macos-update-uninstall.md](setup-guides/macos-update-uninstall.md) |
-| Find commands by task | [commands-reference.md](reference/cli/commands-reference.md) |
-| Check config defaults and keys quickly | [config-reference.md](reference/api/config-reference.md) |
-| Configure custom providers/endpoints | [custom-providers.md](contributing/custom-providers.md) |
-| Configure Z.AI / GLM provider | [zai-glm-setup.md](setup-guides/zai-glm-setup.md) |
-| Use LangGraph integration patterns | [langgraph-integration.md](contributing/langgraph-integration.md) |
-| Operate runtime (day-2 runbook) | [operations-runbook.md](ops/operations-runbook.md) |
-| Troubleshoot install/runtime/channel issues | [troubleshooting.md](ops/troubleshooting.md) |
-| Run Matrix encrypted-room setup and diagnostics | [matrix-e2ee-guide.md](security/matrix-e2ee-guide.md) |
-| Browse docs by category | [SUMMARY.md](SUMMARY.md) |
-| See project PR/issue docs snapshot | [project-triage-snapshot-2026-02-18.md](maintainers/project-triage-snapshot-2026-02-18.md) |
+## Árbol de Decisión Rápido (10 segundos)
 
-## Quick Decision Tree (10 seconds)
+- ¿Primera instalación? → [setup-guides/README.md](setup-guides/README.md)
+- ¿Necesitas CLI/config exactos? → [reference/README.md](reference/README.md)
+- ¿Operaciones de producción/servicio? → [ops/README.md](ops/README.md)
+- ¿Fallos o regresiones? → [troubleshooting.md](ops/troubleshooting.md)
+- ¿Seguridad o roadmap? → [security/README.md](security/README.md)
+- ¿Placas/periféricos? → [hardware/README.md](hardware/README.md)
+- ¿Contribución/revisión/CI? → [contributing/README.md](contributing/README.md)
+- ¿Mapa completo? → [SUMMARY.md](SUMMARY.md)
 
-- Need first-time setup or install? → [setup-guides/README.md](setup-guides/README.md)
-- Need exact CLI/config keys? → [reference/README.md](reference/README.md)
-- Need production/service operations? → [ops/README.md](ops/README.md)
-- Seeing failures or regressions? → [troubleshooting.md](ops/troubleshooting.md)
-- Working on security hardening or roadmap? → [security/README.md](security/README.md)
-- Working with boards/peripherals? → [hardware/README.md](hardware/README.md)
-- Contributing/reviewing/CI workflow? → [contributing/README.md](contributing/README.md)
-- Want the full map? → [SUMMARY.md](SUMMARY.md)
+## Colecciones (Recomendadas)
 
-## Collections (Recommended)
+- Primeros pasos: [setup-guides/README.md](setup-guides/README.md)
+- Catálogos de referencia: [reference/README.md](reference/README.md)
+- Operaciones y despliegue: [ops/README.md](ops/README.md)
+- Documentos de seguridad: [security/README.md](security/README.md)
+- Hardware/periféricos: [hardware/README.md](hardware/README.md)
+- Contribución/CI: [contributing/README.md](contributing/README.md)
+- Snapshots del proyecto: [maintainers/README.md](maintainers/README.md)
 
-- Getting started: [setup-guides/README.md](setup-guides/README.md)
-- Reference catalogs: [reference/README.md](reference/README.md)
-- Operations & deployment: [ops/README.md](ops/README.md)
-- Security docs: [security/README.md](security/README.md)
-- Hardware/peripherals: [hardware/README.md](hardware/README.md)
-- Contributing/CI: [contributing/README.md](contributing/README.md)
-- Project snapshots: [maintainers/README.md](maintainers/README.md)
+## Por Audiencia
 
-## By Audience
+### Usuarios / Operadores
 
-### Users / Operators
+- [commands-reference.md](reference/cli/commands-reference.md) — búsqueda de comandos por workflow
+- [providers-reference.md](reference/api/providers-reference.md) — IDs de providers, aliases, env vars
+- [channels-reference.md](reference/api/channels-reference.md) — capacidades y rutas de setup
+- [matrix-e2ee-guide.md](security/matrix-e2ee-guide.md) — setup de Matrix E2EE y diagnósticos
+- [config-reference.md](reference/api/config-reference.md) — claves de configuración y defaults seguros
+- [custom-providers.md](contributing/custom-providers.md) — templates de integración personalizados
+- [zai-glm-setup.md](setup-guides/zai-glm-setup.md) — setup de Z.AI/GLM
+- [langgraph-integration.md](contributing/langgraph-integration.md) — integración con LangGraph
+- [operations-runbook.md](ops/operations-runbook.md) — operaciones runtime y rollback
+- [troubleshooting.md](ops/troubleshooting.md) — firmas de fallo comunes y recuperación
 
-- [commands-reference.md](reference/cli/commands-reference.md) — command lookup by workflow
-- [providers-reference.md](reference/api/providers-reference.md) — provider IDs, aliases, credential env vars
-- [channels-reference.md](reference/api/channels-reference.md) — channel capabilities and setup paths
-- [matrix-e2ee-guide.md](security/matrix-e2ee-guide.md) — Matrix encrypted-room (E2EE) setup and no-response diagnostics
-- [config-reference.md](reference/api/config-reference.md) — high-signal config keys and secure defaults
-- [custom-providers.md](contributing/custom-providers.md) — custom provider/base URL integration templates
-- [zai-glm-setup.md](setup-guides/zai-glm-setup.md) — Z.AI/GLM setup and endpoint matrix
-- [langgraph-integration.md](contributing/langgraph-integration.md) — fallback integration for model/tool-calling edge cases
-- [operations-runbook.md](ops/operations-runbook.md) — day-2 runtime operations and rollback flow
-- [troubleshooting.md](ops/troubleshooting.md) — common failure signatures and recovery steps
-
-### Contributors / Maintainers
+### Contribuidores / Mantenedores
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md)
 - [pr-workflow.md](contributing/pr-workflow.md)
@@ -69,9 +73,9 @@ Localized hubs:
 - [ci-map.md](contributing/ci-map.md)
 - [actions-source-policy.md](contributing/actions-source-policy.md)
 
-### Security / Reliability
+### Seguridad / Confiabilidad
 
-> Note: this area includes proposal/roadmap docs. For current behavior, start with [config-reference.md](reference/api/config-reference.md), [operations-runbook.md](ops/operations-runbook.md), and [troubleshooting.md](ops/troubleshooting.md).
+> Nota: esta área incluye documentos de propuesta/roadmap. Para comportamiento actual, comenzar con [config-reference.md](reference/api/config-reference.md), [operations-runbook.md](ops/operations-runbook.md), y [troubleshooting.md](ops/troubleshooting.md).
 
 - [security/README.md](security/README.md)
 - [agnostic-security.md](security/agnostic-security.md)
@@ -81,11 +85,7 @@ Localized hubs:
 - [resource-limits.md](ops/resource-limits.md)
 - [security-roadmap.md](security/security-roadmap.md)
 
-## System Navigation & Governance
+## Navegación del Sistema
 
-- Unified TOC: [SUMMARY.md](SUMMARY.md)
-- Docs structure map (language/part/function): [structure/README.md](maintainers/structure-README.md)
-- Documentation inventory/classification: [docs-inventory.md](maintainers/docs-inventory.md)
-- i18n docs index: [i18n/README.md](i18n/README.md)
-- i18n coverage map: [i18n-coverage.md](maintainers/i18n-coverage.md)
-- Project triage snapshot: [project-triage-snapshot-2026-02-18.md](maintainers/project-triage-snapshot-2026-02-18.md)
+- Tabla de contenidos unificada: [SUMMARY.md](SUMMARY.md)
+- Índice de docs i18n: [i18n/README.md](i18n/README.md)
