@@ -8,6 +8,7 @@
 // Already-paired tokens are persisted in config so restarts don't require
 // re-pairing.
 
+use crate::security::otp::OtpValidator;
 use parking_lot::Mutex;
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet};
@@ -45,6 +46,8 @@ pub struct PairingGuard {
     require_pairing: bool,
     /// One-time pairing code (generated on startup, consumed on first pair).
     pairing_code: Arc<Mutex<Option<String>>>,
+    /// OTP Validator for 2FA.
+    otp_validator: Option<Arc<OtpValidator>>,
     /// Set of SHA-256 hashed bearer tokens (persisted across restarts).
     paired_tokens: Arc<Mutex<HashSet<String>>>,
     /// Brute-force protection: per-client failed attempt state + last sweep timestamp.
@@ -62,7 +65,11 @@ impl PairingGuard {
     /// Existing tokens are accepted in both forms:
     /// - Plaintext (`zc_...`): hashed on load for backward compatibility
     /// - Already hashed (64-char hex): stored as-is
-    pub fn new(require_pairing: bool, existing_tokens: &[String]) -> Self {
+    pub fn new(
+        require_pairing: bool,
+        existing_tokens: &[String],
+        otp_validator: Option<Arc<OtpValidator>>,
+    ) -> Self {
         let tokens: HashSet<String> = existing_tokens
             .iter()
             .map(|t| {
@@ -73,7 +80,7 @@ impl PairingGuard {
                 }
             })
             .collect();
-        let code = if require_pairing && tokens.is_empty() {
+        let code = if require_pairing && tokens.is_empty() && otp_validator.is_none() {
             Some(generate_code())
         } else {
             None
@@ -81,6 +88,7 @@ impl PairingGuard {
         Self {
             require_pairing,
             pairing_code: Arc::new(Mutex::new(code)),
+            otp_validator,
             paired_tokens: Arc::new(Mutex::new(tokens)),
             failed_attempts: Arc::new(Mutex::new((HashMap::new(), Instant::now()))),
         }
@@ -124,25 +132,38 @@ impl PairingGuard {
             }
         }
 
-        {
+        let mut success = false;
+
+        // 1. Try OTP validation if enabled
+        if let Some(ref otp) = self.otp_validator {
+            if let Ok(true) = otp.validate(code) {
+                success = true;
+            }
+        }
+
+        // 2. Fallback to pairing code if not paired yet
+        if !success {
             let mut pairing_code = self.pairing_code.lock();
             if let Some(ref expected) = *pairing_code {
                 if constant_time_eq(code.trim(), expected.trim()) {
-                    // Reset failed attempts for this client on success
-                    {
-                        let mut guard = self.failed_attempts.lock();
-                        guard.0.remove(&client_id);
-                    }
-                    let token = generate_token();
-                    let mut tokens = self.paired_tokens.lock();
-                    tokens.insert(hash_token(&token));
-
+                    success = true;
                     // Consume the pairing code so it cannot be reused
                     *pairing_code = None;
-
-                    return Ok(Some(token));
                 }
             }
+        }
+
+        if success {
+            // Reset failed attempts for this client on success
+            {
+                let mut guard = self.failed_attempts.lock();
+                guard.0.remove(&client_id);
+            }
+            let token = generate_token();
+            let mut tokens = self.paired_tokens.lock();
+            tokens.insert(hash_token(&token));
+
+            return Ok(Some(token));
         }
 
         // Increment failed attempts for this client

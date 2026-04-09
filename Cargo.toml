@@ -3,16 +3,16 @@ members = [".", "crates/robot-kit", "crates/aardvark-sys", "apps/tauri"]
 resolver = "2"
 
 [package]
-name = "metaclaw"
+name = "ion"
 version = "0.6.8"
 edition = "2024"
 authors = ["theonlyhennygod"]
 license = "MIT OR Apache-2.0"
-description = "MetaClaw — fork de ZeroClaw. Runtime de agente autónomo en Rust optimizado para rendimiento y extensibilidad."
+description = "ION — fork de ZeroClaw para ionet.cl. Runtime de agente autónomo en Rust optimizado para rendimiento y extensibilidad."
 repository = "https://github.com/zeroclaw-labs/zeroclaw"
 homepage = "https://github.com/zeroclaw-labs/zeroclaw"
 readme = "README.md"
-keywords = ["ai", "agent", "cli", "assistant", "chatbot", "zeroclaw", "metaclaw"]
+keywords = ["ai", "agent", "cli", "assistant", "chatbot", "ion", "ionet"]
 categories = ["command-line-utilities", "api-bindings"]
 rust-version = "1.87"
 include = [
@@ -27,7 +27,7 @@ include = [
 ]
 
 [[bin]]
-name = "zeroclaw"
+name = "ion"
 path = "src/main.rs"
 
 [lib]

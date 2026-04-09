@@ -162,6 +162,10 @@ pub struct Config {
     #[serde(default)]
     pub security_ops: SecurityOpsConfig,
 
+    /// OTP (2FA) security configuration (`[otp]`).
+    #[serde(default)]
+    pub otp: OtpConfig,
+
     /// Runtime adapter configuration (`[runtime]`). Controls native vs Docker execution.
     #[serde(default)]
     pub runtime: RuntimeConfig,
@@ -8426,6 +8430,7 @@ impl Default for Config {
             gemini_cli: GeminiCliConfig::default(),
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
+            otp: OtpConfig::default(),
             shell_tool: ShellToolConfig::default(),
         }
     }

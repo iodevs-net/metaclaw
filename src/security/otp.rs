@@ -106,12 +106,17 @@ impl OtpValidator {
 
     pub fn otpauth_uri(&self) -> String {
         let secret = encode_base32_secret(&self.secret);
-        let account = "zeroclaw";
+        let account = "admin";
         format!(
             "otpauth://totp/{issuer}:{account}?secret={secret}&issuer={issuer}&period={period}",
-            issuer = OTP_ISSUER,
+            issuer = "ION",
             period = self.config.token_ttl_secs.max(1)
         )
+    }
+
+    pub fn generate_temporary_secret() -> String {
+        let raw: [u8; 20] = rand::random();
+        encode_base32_secret(&raw)
     }
 
     #[cfg(test)]

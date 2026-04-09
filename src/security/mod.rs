@@ -99,7 +99,7 @@ mod tests {
         let policy = SecurityPolicy::default();
         assert_eq!(policy.autonomy, AutonomyLevel::Supervised);
 
-        let guard = PairingGuard::new(false, &[]);
+        let guard = PairingGuard::new(false, &[], None);
         assert!(!guard.require_pairing());
     }
 

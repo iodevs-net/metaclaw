@@ -65,32 +65,35 @@ RUN --mount=type=cache,id=zeroclaw-cargo-registry,target=/usr/local/cargo/regist
     else \
       cargo build --release --locked; \
     fi && \
-    cp target/release/zeroclaw /app/zeroclaw && \
-    strip /app/zeroclaw
-RUN size=$(stat -c%s /app/zeroclaw) && \
+    cp target/release/ion /app/ion && \
+    strip /app/ion
+RUN size=$(stat -c%s /app/ion) && \
     if [ "$size" -lt 1000000 ]; then echo "ERROR: binary too small (${size} bytes), likely dummy build artifact" && exit 1; fi
 
 # Prepare runtime directory structure and default config inline (no extra stage)
-RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
+RUN mkdir -p /ion-data/.ion /ion-data/workspace && \
     printf '%s\n' \
-        'workspace_dir = "/zeroclaw-data/workspace"' \
-        'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
+        'workspace_dir = "/ion-data/workspace"' \
+        'config_path = "/ion-data/.ion/config.toml"' \
         'api_key = ""' \
         'default_provider = "openrouter"' \
         'default_model = "anthropic/claude-sonnet-4-20250514"' \
         'default_temperature = 0.7' \
         '' \
+        '[otp]' \
+        'enabled = true' \
+        '' \
         '[gateway]' \
         'port = 42617' \
         'host = "[::]"' \
         'allow_public_bind = true' \
-        'require_pairing = false' \
+        'require_pairing = true' \
         '' \
         '[autonomy]' \
         'level = "supervised"' \
         'auto_approve = ["file_read", "file_write", "file_edit", "memory_recall", "memory_store", "web_search_tool", "web_fetch", "calculator", "glob_search", "content_search", "image_info", "weather", "git_operations"]' \
-        > /zeroclaw-data/.zeroclaw/config.toml && \
-    chown -R 65534:65534 /zeroclaw-data
+        > /ion-data/.ion/config.toml && \
+    chown -R 65534:65534 /ion-data
 
 # ── Stage 2: Development Runtime (Debian) ────────────────────
 FROM debian:trixie-slim@sha256:f6e2cfac5cf956ea044b4bd75e6397b4372ad88fe00908045e9a0d21712ae3ba AS dev
@@ -101,57 +104,49 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /zeroclaw-data /zeroclaw-data
-COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
+COPY --from=builder /ion-data /ion-data
+COPY --from=builder /app/ion /usr/local/bin/ion
 
 # Overwrite minimal config with DEV template (Ollama defaults)
-COPY dev/config.template.toml /zeroclaw-data/.zeroclaw/config.toml
-RUN chown 65534:65534 /zeroclaw-data/.zeroclaw/config.toml
+# COPY dev/config.template.toml /ion-data/.ion/config.toml
+# RUN chown 65534:65534 /ion-data/.ion/config.toml
 
 # Environment setup
 # Ensure UTF-8 locale so CJK / multibyte input is handled correctly
 ENV LANG=C.UTF-8
 # Use consistent workspace path
-ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
-ENV HOME=/zeroclaw-data
-# Defaults for local dev (Ollama) - matches config.template.toml
+ENV ION_WORKSPACE=/ion-data/workspace
+ENV HOME=/ion-data
+# Defaults for local dev (Ollama)
 ENV PROVIDER="ollama"
-ENV ZEROCLAW_MODEL="llama3.2"
-ENV ZEROCLAW_GATEWAY_PORT=42617
+ENV ION_MODEL="llama3.2"
+ENV ION_GATEWAY_PORT=42617
 
-# Note: API_KEY is intentionally NOT set here to avoid confusion.
-# It is set in config.toml as the Ollama URL.
-
-WORKDIR /zeroclaw-data
+WORKDIR /ion-data
 USER 65534:65534
 EXPOSE 42617
 HEALTHCHECK --interval=60s --timeout=10s --retries=3 --start-period=10s \
-    CMD ["zeroclaw", "status", "--format=exit-code"]
-ENTRYPOINT ["zeroclaw"]
+    CMD ["ion", "status", "--format=exit-code"]
+ENTRYPOINT ["ion"]
 CMD ["daemon"]
 
 # ── Stage 3: Production Runtime (Distroless) ─────────────────
 FROM gcr.io/distroless/cc-debian13:nonroot@sha256:84fcd3c223b144b0cb6edc5ecc75641819842a9679a3a58fd6294bec47532bf7 AS release
 
-COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
-COPY --from=builder /zeroclaw-data /zeroclaw-data
+COPY --from=builder /app/ion /usr/local/bin/ion
+COPY --from=builder /ion-data /ion-data
 
 # Environment setup
 # Ensure UTF-8 locale so CJK / multibyte input is handled correctly
 ENV LANG=C.UTF-8
-ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
-ENV HOME=/zeroclaw-data
-# Default provider and model are set in config.toml, not here,
-# so config file edits are not silently overridden
-#ENV PROVIDER=
-ENV ZEROCLAW_GATEWAY_PORT=42617
+ENV ION_WORKSPACE=/ion-data/workspace
+ENV HOME=/ion-data
+ENV ION_GATEWAY_PORT=42617
 
-# API_KEY must be provided at runtime!
-
-WORKDIR /zeroclaw-data
+WORKDIR /ion-data
 USER 65534:65534
 EXPOSE 42617
 HEALTHCHECK --interval=60s --timeout=10s --retries=3 --start-period=10s \
-    CMD ["zeroclaw", "status", "--format=exit-code"]
-ENTRYPOINT ["zeroclaw"]
+    CMD ["ion", "status", "--format=exit-code"]
+ENTRYPOINT ["ion"]
 CMD ["daemon"]

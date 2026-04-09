@@ -691,9 +691,34 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
     };
 
     // ── Pairing guard ──────────────────────────────────────
+    let otp_validator = if config.security.otp.enabled {
+        let secret_store = Arc::new(crate::security::SecretStore::new(&config.workspace_dir, true));
+        match crate::security::otp::OtpValidator::from_config(
+            &config.security.otp,
+            &config.workspace_dir,
+            &secret_store,
+        ) {
+            Ok((v, uri)) => {
+                if let Some(otp_uri) = uri {
+                    println!("\n🔐 [ION SECURITY] 2FA SETUP REQUIRED");
+                    println!("   Scan this URI in your Authenticator app (Google/Authy):");
+                    println!("   {otp_uri}\n");
+                }
+                Some(Arc::new(v))
+            }
+            Err(e) => {
+                tracing::error!("Failed to initialize OTP validator: {e}");
+                None
+            }
+        }
+    } else {
+        None
+    };
+
     let pairing = Arc::new(PairingGuard::new(
         config.gateway.require_pairing,
         &config.gateway.paired_tokens,
+        otp_validator,
     ));
     let rate_limit_max_keys = normalize_max_keys(
         config.gateway.rate_limit_max_keys,
@@ -739,24 +764,24 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
     }
 
     let pfx = path_prefix.unwrap_or("");
-    println!("🦀 ZeroClaw Gateway listening on http://{display_addr}{pfx}");
+    println!("🚀 ION Gateway (ionet.cl) listening on http://{display_addr}{pfx}");
     if let Some(ref url) = tunnel_url {
         println!("  🌐 Public URL: {url}");
     }
     println!("  🌐 Web Dashboard: http://{display_addr}{pfx}/");
     if let Some(code) = pairing.pairing_code() {
         println!();
-        println!("  🔐 PAIRING REQUIRED — use this one-time code:");
+        println!("  🔐 [ION SECURITY] PAIRING REQUIRED — use this one-time code:");
         println!("     ┌──────────────┐");
         println!("     │  {code}  │");
         println!("     └──────────────┘");
         println!("     Send: POST {pfx}/pair with header X-Pairing-Code: {code}");
     } else if pairing.require_pairing() {
-        println!("  🔒 Pairing: ACTIVE (bearer token required)");
-        println!("     To pair a new device: zeroclaw gateway get-paircode --new");
+        println!("  🔒 [ION SECURITY] Pairing: ACTIVE (2FA or Bearer token required)");
+        println!("     To pair a new device: ion gateway get-paircode --new");
         println!();
     } else {
-        println!("  ⚠️  Pairing: DISABLED (all requests accepted)");
+        println!("  ⚠️  [ION SECURITY] Pairing: DISABLED (Internal use only)");
         println!();
     }
     println!("  POST {pfx}/pair      — pair a new client (X-Pairing-Code header)");
@@ -2316,7 +2341,7 @@ mod tests {
             mem: Arc::new(MockMemory),
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -2384,7 +2409,7 @@ mod tests {
             mem: Arc::new(MockMemory),
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -2569,7 +2594,7 @@ mod tests {
         config.workspace_dir = workspace_path;
         config.save().await.unwrap();
 
-        let guard = PairingGuard::new(true, &[]);
+        let guard = PairingGuard::new(true, &[], None);
         let code = guard.pairing_code().unwrap();
         let token = guard.try_pair(&code, "test_client").await.unwrap().unwrap();
         assert!(guard.is_authenticated(&token));
@@ -2778,7 +2803,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -2856,7 +2881,7 @@ mod tests {
             mem: memory,
             auto_save: true,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -2946,7 +2971,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -3008,7 +3033,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&valid_secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -3075,7 +3100,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: Some(Arc::from(hash_webhook_secret(&secret))),
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -3147,7 +3172,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),
@@ -3216,7 +3241,7 @@ mod tests {
             mem: memory,
             auto_save: false,
             webhook_secret_hash: None,
-            pairing: Arc::new(PairingGuard::new(false, &[])),
+            pairing: Arc::new(PairingGuard::new(false, &[], None)),
             trust_forwarded_headers: false,
             rate_limiter: Arc::new(GatewayRateLimiter::new(100, 100, 100)),
             auth_limiter: Arc::new(auth_rate_limit::AuthRateLimiter::new()),

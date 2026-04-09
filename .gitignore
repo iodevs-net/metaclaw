@@ -57,4 +57,5 @@ lcov.info
 playground/
 
 # Temporary rustc output
-rust_out
+rust_outzeroclaw-data/
+ion-data/
