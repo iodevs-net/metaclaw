@@ -5,6 +5,9 @@
 ### Configuración inicial
 - [METACLAV_LOCAL_SETUP.md](./METACLAV_LOCAL_SETUP.md) — Setup completo del entorno
 
+### IONet Integration (Empresa de Soporte TI)
+- [IONET_SETUP.md](./IONET_SETUP.md) — Configuración para iOdesk, M365, Intune, Email
+
 ### MCP Cloud Storage (archivos en la nube)
 - [MCP_CLOUD_STORAGE_SETUP.md](./MCP_CLOUD_STORAGE_SETUP.md) — Resumen de configuración
 - [CREDENTIALS_GOOGLE_DRIVE.md](./CREDENTIALS_GOOGLE_DRIVE.md) — Cómo obtener credenciales Google
