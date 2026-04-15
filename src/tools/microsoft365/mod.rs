@@ -1,11 +1,12 @@
 //! Microsoft 365 integration tool — Graph API access for Mail, Teams, Calendar,
-//! OneDrive, and SharePoint via a single action-dispatched tool surface.
+//! OneDrive, SharePoint, and Microsoft Intune via a single action-dispatched tool surface.
 //!
 //! Auth is handled through direct HTTP calls to the Microsoft identity platform
 //! (client credentials or device code flow) with token caching.
 
 pub mod auth;
 pub mod graph_client;
+pub mod intune_client;
 pub mod types;
 
 use crate::security::SecurityPolicy;
@@ -55,16 +56,38 @@ impl Microsoft365Tool {
 
     async fn dispatch(&self, action: &str, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
         match action {
+            // Email
             "mail_list" => self.handle_mail_list(args).await,
             "mail_send" => self.handle_mail_send(args).await,
+            // Teams
             "teams_message_list" => self.handle_teams_message_list(args).await,
             "teams_message_send" => self.handle_teams_message_send(args).await,
+            // Calendar
             "calendar_events_list" => self.handle_calendar_events_list(args).await,
             "calendar_event_create" => self.handle_calendar_event_create(args).await,
             "calendar_event_delete" => self.handle_calendar_event_delete(args).await,
+            // OneDrive
             "onedrive_list" => self.handle_onedrive_list(args).await,
             "onedrive_download" => self.handle_onedrive_download(args).await,
+            // SharePoint
             "sharepoint_search" => self.handle_sharepoint_search(args).await,
+            // Intune / Endpoint Manager
+            "intune_device_list" => self.handle_intune_device_list(args).await,
+            "intune_device_get" => self.handle_intune_device_get(args).await,
+            "intune_device_by_user" => self.handle_intune_device_by_user(args).await,
+            "intune_device_detected_apps" => self.handle_intune_device_detected_apps(args).await,
+            "intune_device_wipe" => self.handle_intune_device_wipe(args).await,
+            "intune_device_retire" => self.handle_intune_device_retire(args).await,
+            "intune_device_disable" => self.handle_intune_device_disable(args).await,
+            "intune_device_reboot" => self.handle_intune_device_reboot(args).await,
+            "intune_device_logout" => self.handle_intune_device_logout(args).await,
+            "intune_compliance_summary" => self.handle_intune_compliance_summary(args).await,
+            "intune_compliance_policies" => self.handle_intune_compliance_policies(args).await,
+            "intune_device_configurations" => self.handle_intune_device_configurations(args).await,
+            "intune_apps_list" => self.handle_intune_apps_list(args).await,
+            "intune_app_get" => self.handle_intune_app_get(args).await,
+            "intune_app_configurations" => self.handle_intune_app_configurations(args).await,
+            "intune_enrollment_config" => self.handle_intune_enrollment_config(args).await,
             _ => Ok(ToolResult {
                 success: false,
                 output: String::new(),
@@ -383,6 +406,309 @@ impl Microsoft365Tool {
             error: None,
         })
     }
+
+    // ── Intune / Endpoint Manager actions ───────────────────────────
+
+    async fn handle_intune_device_list(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_device_list")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+        let filter = args["filter"].as_str();
+        let select = args["select"].as_str();
+
+        let result = intune_client::device_list(&self.http_client, &token, top, filter, select).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_get(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_device_get")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+
+        let result = intune_client::device_get(&self.http_client, &token, device_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_by_user(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_device_by_user")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let user_id = args["user_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("user_id is required"))?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+
+        let result = intune_client::device_list_by_user(&self.http_client, &token, user_id, top).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_detected_apps(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_device_detected_apps")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+
+        let result = intune_client::device_detected_apps(&self.http_client, &token, device_id, top).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_wipe(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Act, "microsoft365.intune_device_wipe")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+        let keep_encryption_keys = args["keep_encryption_keys"].as_bool();
+        let use_recovery_key = args["use_recovery_key"].as_bool();
+
+        intune_client::device_wipe(&self.http_client, &token, device_id, keep_encryption_keys, use_recovery_key).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: format!("Wipe requested for device {device_id}. WARNING: This will erase all data!"),
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_retire(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Act, "microsoft365.intune_device_retire")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+
+        intune_client::device_retire(&self.http_client, &token, device_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: format!("Retire requested for device {device_id}. Company data will be removed, user data preserved."),
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_disable(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Act, "microsoft365.intune_device_disable")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+
+        intune_client::device_disable(&self.http_client, &token, device_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: format!("Device {device_id} has been disabled. Access to company resources blocked."),
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_reboot(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Act, "microsoft365.intune_device_reboot")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+
+        intune_client::device_reboot(&self.http_client, &token, device_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: format!("Reboot requested for device {device_id}."),
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_logout(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Act, "microsoft365.intune_device_logout")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let device_id = args["device_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("device_id is required"))?;
+
+        intune_client::device_logout_users(&self.http_client, &token, device_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: format!("All users logged out from shared device {device_id}."),
+            error: None,
+        })
+    }
+
+    async fn handle_intune_compliance_summary(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_compliance_summary")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let result = intune_client::compliance_summary(&self.http_client, &token).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_compliance_policies(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_compliance_policies")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+
+        let result = intune_client::compliance_policies_list(&self.http_client, &token, top).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_device_configurations(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_device_configurations")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+
+        let result = intune_client::device_configurations_list(&self.http_client, &token, top).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_apps_list(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_apps_list")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+        let filter = args["filter"].as_str();
+
+        let result = intune_client::apps_list(&self.http_client, &token, top, filter).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_app_get(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_app_get")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let app_id = args["app_id"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("app_id is required"))?;
+
+        let result = intune_client::app_get(&self.http_client, &token, app_id).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_app_configurations(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_app_configurations")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+        let top = u32::try_from(args["top"].as_u64().unwrap_or(u64::from(DEFAULT_TOP)))
+            .unwrap_or(DEFAULT_TOP);
+
+        let result = intune_client::app_configurations_list(&self.http_client, &token, top).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
+
+    async fn handle_intune_enrollment_config(&self, args: &serde_json::Value) -> anyhow::Result<ToolResult> {
+        self.security
+            .enforce_tool_operation(ToolOperation::Read, "microsoft365.intune_enrollment_config")
+            .map_err(|e| anyhow::anyhow!(e))?;
+
+        let token = self.get_token().await?;
+
+        let result = intune_client::enrollment_configurations_list(&self.http_client, &token).await?;
+
+        Ok(ToolResult {
+            success: true,
+            output: serde_json::to_string_pretty(&result)?,
+            error: None,
+        })
+    }
 }
 
 #[async_trait]
@@ -393,7 +719,8 @@ impl Tool for Microsoft365Tool {
 
     fn description(&self) -> &str {
         "Microsoft 365 integration: manage Outlook mail, Teams messages, Calendar events, \
-         OneDrive files, and SharePoint search via Microsoft Graph API"
+         OneDrive files, SharePoint search, and Microsoft Intune/Endpoint Manager devices, \
+         compliance policies, and mobile apps via Microsoft Graph API"
     }
 
     fn parameters_schema(&self) -> serde_json::Value {
@@ -413,7 +740,23 @@ impl Tool for Microsoft365Tool {
                         "calendar_event_delete",
                         "onedrive_list",
                         "onedrive_download",
-                        "sharepoint_search"
+                        "sharepoint_search",
+                        "intune_device_list",
+                        "intune_device_get",
+                        "intune_device_by_user",
+                        "intune_device_detected_apps",
+                        "intune_device_wipe",
+                        "intune_device_retire",
+                        "intune_device_disable",
+                        "intune_device_reboot",
+                        "intune_device_logout",
+                        "intune_compliance_summary",
+                        "intune_compliance_policies",
+                        "intune_device_configurations",
+                        "intune_apps_list",
+                        "intune_app_get",
+                        "intune_app_configurations",
+                        "intune_enrollment_config"
                     ],
                     "description": "The Microsoft 365 action to perform"
                 },
@@ -478,6 +821,35 @@ impl Tool for Microsoft365Tool {
                 "top": {
                     "type": "integer",
                     "description": "Maximum number of items to return (default 25)"
+                },
+                // Intune / Endpoint Manager parameters
+                "device_id": {
+                    "type": "string",
+                    "description": "Intune device ID (for device actions)"
+                },
+                "user_id": {
+                    "type": "string",
+                    "description": "User ID or email (for intune_device_by_user)"
+                },
+                "filter": {
+                    "type": "string",
+                    "description": "OData filter expression (for intune_device_list, intune_apps_list)"
+                },
+                "select": {
+                    "type": "string",
+                    "description": "Comma-separated fields to return (for intune_device_list)"
+                },
+                "keep_encryption_keys": {
+                    "type": "boolean",
+                    "description": "Keep BitLocker keys during wipe (for intune_device_wipe)"
+                },
+                "use_recovery_key": {
+                    "type": "boolean",
+                    "description": "Use wipe recovery key (for intune_device_wipe)"
+                },
+                "app_id": {
+                    "type": "string",
+                    "description": "App ID (for intune_app_get)"
                 }
             }
         })
@@ -535,16 +907,36 @@ mod tests {
                         "calendar_event_delete",
                         "onedrive_list",
                         "onedrive_download",
-                        "sharepoint_search"
+                        "sharepoint_search",
+                        "intune_device_list",
+                        "intune_device_get",
+                        "intune_device_by_user",
+                        "intune_device_detected_apps",
+                        "intune_device_wipe",
+                        "intune_device_retire",
+                        "intune_device_disable",
+                        "intune_device_reboot",
+                        "intune_device_logout",
+                        "intune_compliance_summary",
+                        "intune_compliance_policies",
+                        "intune_device_configurations",
+                        "intune_apps_list",
+                        "intune_app_get",
+                        "intune_app_configurations",
+                        "intune_enrollment_config"
                     ]
                 }
             }
         });
 
         let actions = schema["properties"]["action"]["enum"].as_array().unwrap();
-        assert_eq!(actions.len(), 10);
+        assert_eq!(actions.len(), 26);
         assert!(actions.contains(&json!("mail_list")));
         assert!(actions.contains(&json!("sharepoint_search")));
+        // Intune actions
+        assert!(actions.contains(&json!("intune_device_list")));
+        assert!(actions.contains(&json!("intune_device_wipe")));
+        assert!(actions.contains(&json!("intune_compliance_summary")));
     }
 
     #[test]
@@ -560,8 +952,24 @@ mod tests {
             "onedrive_list",
             "onedrive_download",
             "sharepoint_search",
+            "intune_device_list",
+            "intune_device_get",
+            "intune_device_by_user",
+            "intune_device_detected_apps",
+            "intune_device_wipe",
+            "intune_device_retire",
+            "intune_device_disable",
+            "intune_device_reboot",
+            "intune_device_logout",
+            "intune_compliance_summary",
+            "intune_compliance_policies",
+            "intune_device_configurations",
+            "intune_apps_list",
+            "intune_app_get",
+            "intune_app_configurations",
+            "intune_enrollment_config",
         ];
-        assert_eq!(valid_actions.len(), 10);
+        assert_eq!(valid_actions.len(), 26);
         assert!(!valid_actions.contains(&"invalid_action"));
     }
 }
